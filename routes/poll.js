@@ -114,7 +114,7 @@ module.exports = (app) => {
             message: 'Poll was updated successfully',
           });
         }
-        return res.status(500).json({
+        return res.status(403).json({
           message: 'No such poll or you are not authorized to update this poll',
         });
       })
@@ -156,5 +156,34 @@ module.exports = (app) => {
       });
     });
   });
+
+  app.delete(
+    '/poll/:pollId',
+    passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+      // validation
+      const query = {
+        _id: req.params.pollId,
+        creator: req.user.id,
+      };
+      Poll.findOneAndRemove(query)
+      .then(deletedPoll => {
+        if (deletedPoll) {
+          return res.json({
+            message: 'Poll was deleted successfully',
+          });
+        }
+        return res.status(403).json({
+          message: 'No such poll or you are not authorized to delete this poll',
+        });
+      })
+      .catch(error => {
+        return res.status(500).json({
+          message: 'An error happened while deleting this poll',
+        });
+      });
+    }
+  );
+
 
 }
