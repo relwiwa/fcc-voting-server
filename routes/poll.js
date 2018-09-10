@@ -32,7 +32,7 @@ module.exports = (app) => {
 //  createPolls(15);
 
   app.get('/polls', (req, res) => {
-    Poll.find({}, '_id question creationDate voters')
+    Poll.find({}, '_id question creationDate creator voters')
     .then(polls => {
       return res.json({
         polls,
@@ -72,7 +72,6 @@ module.exports = (app) => {
     '/poll',
     passport.authenticate('jwt', { session: false }),
     (req, res) => {
-      const options = req.body.options.map(option => { value: option.value });
       new Poll({
         question: req.body.question,
         options: req.body.options,
@@ -105,8 +104,7 @@ module.exports = (app) => {
       };
       // TODO: validation
       const update = {
-        question: req.body.question,
-        options: req.body.options,
+        $push: { options: { $each: req.body.options } },
       };
       Poll.findOneAndUpdate(query, update, { new: true })
       .then(updatedPoll => {
