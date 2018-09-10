@@ -20,7 +20,9 @@ const pollSchema = new Schema({
   },
   options: [PollOption],
   voters: {
-    type: [Schema.Types.ObjectId],
+    type: [String],
+    required: true,
+    default: [],
   },
   creationDate: {
     type: Date,

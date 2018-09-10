@@ -16,9 +16,6 @@ module.exports = (app) => {
         });
       }
       const voters = [];
-      if (Math.random() > 0.7) {
-        voters.push('5b8c18b0eb3e4e31ace65437');
-      } 
       new Poll({
         question: faker.lorem.slug(),
         options,
@@ -31,7 +28,7 @@ module.exports = (app) => {
       });
     }
   } 
-//  createPolls(5);
+//  createPolls(15);
 
   app.get('/polls', (req, res) => {
     Poll.find({}, '_id question creationDate voters')
@@ -70,5 +67,35 @@ module.exports = (app) => {
     });
   });      
 
+  app.patch('/poll/:pollId/vote', (req, res) => {
+    Poll.findOneAndUpdate(
+      {
+        _id: req.params.pollId,
+        'options._id': req.body.optionId, 
+      }, {
+        $inc: { 'options.$.votes': 1 },
+        $push: { voters: req.body.voter },
+      }, {
+        new: true,
+      }
+    )
+    .then(updatedPoll => {
+      if (updatedPoll) {
+        return res.json({
+          poll: updatedPoll
+        });
+      }
+      else {
+        return res.status(404).json({
+          message: 'No such poll',
+        });
+      }
+    })
+    .catch(error => {
+      return res.status(500).json({
+        message: 'An error occurred while performing the query for this poll',
+      });
+    });
+  });
+
 }
- 
