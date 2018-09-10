@@ -1,5 +1,6 @@
 const faker = require('faker');
 const mongoose = require('mongoose');
+const passport = require('passport');
 
 const Poll = mongoose.model('Poll');
 
@@ -65,7 +66,32 @@ module.exports = (app) => {
         message: 'An error occurred while performing the query for this poll',
       });
     });
-  });      
+  });
+
+  app.post(
+    '/poll',
+    passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+      const options = req.body.options.map(option => { value: option.value });
+      new Poll({
+        question: req.body.question,
+        options: req.body.options,
+        creator: req.user.id,
+      })
+      .save()
+      .then(newPoll => {
+        return res.json({
+          poll: newPoll,
+          message: 'New poll was created successfully',
+        });
+      })
+      .catch(error => {
+        return res.status(500).json({
+          message: 'An error happened while creating this poll',
+        });
+      })
+    }
+  );
 
   app.patch('/poll/:pollId/vote', (req, res) => {
     Poll.findOneAndUpdate(
