@@ -93,6 +93,41 @@ module.exports = (app) => {
     }
   );
 
+  app.patch(
+    '/poll/:pollId',
+    passport.authenticate('jwt', { session: false }),
+    (req, res) => {
+      // check whether authorized user is creator of poll before db query
+      // TODO: validation
+      const query = {
+        _id: req.params.pollId,
+        creator: req.user.id,
+      };
+      // TODO: validation
+      const update = {
+        question: req.body.question,
+        options: req.body.options,
+      };
+      Poll.findOneAndUpdate(query, update, { new: true })
+      .then(updatedPoll => {
+        if (updatedPoll) {
+          return res.json({
+            poll: updatedPoll,
+            message: 'Poll was updated successfully',
+          });
+        }
+        return res.status(500).json({
+          message: 'No such poll or you are not authorized to update this poll',
+        });
+      })
+      .catch(error => {
+        return res.status(500).json({
+          message: 'An error happened while updating this poll',
+        });
+      });
+    }
+  );
+
   app.patch('/poll/:pollId/vote', (req, res) => {
     Poll.findOneAndUpdate(
       {
