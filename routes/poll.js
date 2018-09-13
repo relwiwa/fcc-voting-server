@@ -32,7 +32,9 @@ module.exports = (app) => {
 //  createPolls(15);
 
   app.get('/polls', (req, res) => {
-    Poll.find({}, '_id question creationDate creator voters')
+    Poll
+    .find({}, '_id question creationDate creator voters')
+    .sort([['creationDate', -1]])
     .then(polls => {
       return res.json({
         polls,
@@ -43,7 +45,25 @@ module.exports = (app) => {
         message: 'An error occurred while performing the query for polls',
       });
     });
-  });      
+  });
+
+  app.get('/polls/:userId', (req, res) => {
+    Poll
+    .find({
+      creator: req.params.userId,
+    }, '_id question creationDate creator voters')
+    .sort([['creationDate', -1]])
+    .then(polls => {
+      return res.json({
+        polls,
+      });
+    })
+    .catch(error => {
+      return res.status(500).json({
+        message: 'An error occurred while performing the query for polls',
+      });
+    });
+  });
 
   app.get('/poll/:pollId', (req, res) => {
     // TODO: Validation
@@ -96,7 +116,6 @@ module.exports = (app) => {
     '/poll/:pollId',
     passport.authenticate('jwt', { session: false }),
     (req, res) => {
-      // check whether authorized user is creator of poll before db query
       // TODO: validation
       const query = {
         _id: req.params.pollId,
