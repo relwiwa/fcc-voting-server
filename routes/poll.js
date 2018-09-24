@@ -1,4 +1,4 @@
-const faker = require('faker');
+//const faker = require('faker');
 const mongoose = require('mongoose');
 const passport = require('passport');
 
